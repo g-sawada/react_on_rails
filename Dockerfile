@@ -30,7 +30,7 @@ RUN apt-get update -qq \
   && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
   # ビルドツール，Node.js, Yarn, Vimのインストール
-RUN apt-get install -y build-essential libssl-dev nodejs yarn vim
+RUN apt-get update -qq && apt-get install -y build-essential libssl-dev nodejs yarn vim
 
 
 # バンドラーのインストール
@@ -50,16 +50,15 @@ COPY package.json /$APP_NAME/package.json
 COPY . /$APP_NAME/
 
 # 一時的なSECRET_KEY_BASEを生成し,それを使用してアセットのプリコンパイルとクリーニングを行う
-RUN SECRET_KEY_BASE="$(bundle exec rails secret)" bin/rails assets:precompile assets:clean
-
+RUN SECRET_KEY_BASE="$(bundle exec rails secret)" bin/rails assets:precompile assets:clean \
 # package.jsonに記載されたパッケージをインストール。開発依存を除外し，yarn.lockは変更しないことを保証
-RUN yarn install --production --frozen-lockfile \
-  # yarnのキャッシュをクリーニング
-  && yarn cache clean \
-  # node_modulesディレクトリとキャッシュディレクトリを削除して，イメージのサイズを小さくする
-  && rm -rf /$APP_NAME/node_modules /$APP_NAME/tmp/cache
+&& yarn install --production --frozen-lockfile \
+# yarnのキャッシュをクリーニング
+&& yarn cache clean \
+# node_modulesディレクトリとキャッシュディレクトリを削除して，イメージのサイズを小さくする
+&& rm -rf /$APP_NAME/node_modules /$APP_NAME/tmp/cache
 
-# Entrypoint prepares the database.(デフォルト生成のDockerfileから引用)
+# Entrypoint prepares the database.(デフォルト生成から引用)
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
 # コンテナの3000番ポートを開放
