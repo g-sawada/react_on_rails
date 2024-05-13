@@ -1,75 +1,68 @@
-# syntax = docker/dockerfile:1
+#applicationのディレクトリ名で置き換えてください
+ARG APP_NAME=react-on-rails
+#使いたいrubyのimage名に置き換えてください
+ARG RUBY_IMAGE=ruby:3.2.3
 
-# Make sure RUBY_VERSION matches the Ruby version in .ruby-version and Gemfile
-ARG RUBY_VERSION=3.2.3
-FROM registry.docker.com/library/ruby:$RUBY_VERSION-slim as base
+FROM --platform=linux/amd64 $RUBY_IMAGE
+ARG APP_NAME
 
-# Rails app lives here
-WORKDIR /rails
+# 環境はproduction
+ENV RAILS_ENV production
+# bundlerの実行もproductionモード
+ENV BUNDLE_DEPLOYMENT true
+# developmentやtestだけで必要なgemはインストールしない
+ENV BUNDLE_WITHOUT development:test
+# 自身で静的ファイルを配信する
+ENV RAILS_SERVE_STATIC_FILES true
+# Railsアプリのログを標準出力に出力
+ENV RAILS_LOG_TO_STDOUT true
 
-# Set production environment
-ENV RAILS_ENV="production" \
-    BUNDLE_DEPLOYMENT="1" \
-    BUNDLE_PATH="/usr/local/bundle" \
-    BUNDLE_WITHOUT="development"
+RUN mkdir /$APP_NAME
+WORKDIR /$APP_NAME
 
+RUN apt-get update -qq \
+  && apt-get install -y ca-certificates curl gnupg \
+  && mkdir -p /etc/apt/keyrings \
+  && curl -fsSL https://deb.nodesource.com/gpgkey/nodesource-repo.gpg.key | gpg --dearmor -o /etc/apt/keyrings/nodesource.gpg \
+  && NODE_MAJOR=20 \
+  && echo "deb [signed-by=/etc/apt/keyrings/nodesource.gpg] https://deb.nodesource.com/node_$NODE_MAJOR.x nodistro main" | tee /etc/apt/sources.list.d/nodesource.list \
+  && wget --quiet -O - /tmp/pubkey.gpg https://dl.yarnpkg.com/debian/pubkey.gpg | apt-key add - \
+  && echo "deb https://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list
 
-# Throw-away build stage to reduce size of final image
-FROM base as build
-
-# Install packages needed to build gems and node modules
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y build-essential curl default-libmysqlclient-dev git libvips node-gyp pkg-config python-is-python3
-
-# Install JavaScript dependencies
-ARG NODE_VERSION=20.12.2
-ARG YARN_VERSION=1.22.19
-ENV PATH=/usr/local/node/bin:$PATH
-RUN curl -sL https://github.com/nodenv/node-build/archive/master.tar.gz | tar xz -C /tmp/ && \
-    /tmp/node-build-master/bin/node-build "${NODE_VERSION}" /usr/local/node && \
-    npm install -g yarn@$YARN_VERSION && \
-    rm -rf /tmp/node-build-master
-
-# Install application gems
-COPY Gemfile Gemfile.lock ./
-RUN bundle install && \
-    rm -rf ~/.bundle/ "${BUNDLE_PATH}"/ruby/*/cache "${BUNDLE_PATH}"/ruby/*/bundler/gems/*/.git && \
-    bundle exec bootsnap precompile --gemfile
-
-# Install node modules
-COPY package.json yarn.lock ./
-RUN yarn install --frozen-lockfile
-
-# Copy application code
-COPY . .
-
-# Precompile bootsnap code for faster boot times
-RUN bundle exec bootsnap precompile app/ lib/
-
-# Precompiling assets for production without requiring secret RAILS_MASTER_KEY
-RUN SECRET_KEY_BASE_DUMMY=1 ./bin/rails assets:precompile
+  # ビルドツール，Node.js, Yarn, Vimのインストール
+RUN apt-get install -y build-essential libssl-dev nodejs yarn vim
 
 
-# Final stage for app image
-FROM base
+# バンドラーのインストール
+RUN gem install bundler
 
-# Install packages needed for deployment
-RUN apt-get update -qq && \
-    apt-get install --no-install-recommends -y curl default-mysql-client libvips && \
-    rm -rf /var/lib/apt/lists /var/cache/apt/archives
+# ローカルのGemfileとGemfile.lockをイメージ内にコピー
+COPY Gemfile /$APP_NAME/Gemfile
+COPY Gemfile.lock /$APP_NAME/Gemfile.lock
 
-# Copy built artifacts: gems, application
-COPY --from=build /usr/local/bundle /usr/local/bundle
-COPY --from=build /rails /rails
+RUN bundle install
 
-# Run and own only the runtime files as a non-root user for security
-RUN useradd rails --create-home --shell /bin/bash && \
-    chown -R rails:rails db log storage tmp
-USER rails:rails
+# ローカルのyarn.lockとpakage.jsonをイメージ内にコピー
+COPY yarn.lock /$APP_NAME/yarn.lock
+COPY package.json /$APP_NAME/package.json
 
-# Entrypoint prepares the database.
+# ローカルのアプリケーションの全てのファイルとディレクトリをコピー
+COPY . /$APP_NAME/
+
+# 一時的なSECRET_KEY_BASEを生成し,それを使用してアセットのプリコンパイルとクリーニングを行う
+RUN SECRET_KEY_BASE="$(bundle exec rails secret)" bin/rails assets:precompile assets:clean
+
+# package.jsonに記載されたパッケージをインストール。開発依存を除外し，yarn.lockは変更しないことを保証
+RUN yarn install --production --frozen-lockfile \
+  # yarnのキャッシュをクリーニング
+  && yarn cache clean \
+  # node_modulesディレクトリとキャッシュディレクトリを削除して，イメージのサイズを小さくする
+  && rm -rf /$APP_NAME/node_modules /$APP_NAME/tmp/cache
+
+# Entrypoint prepares the database.(デフォルト生成のDockerfileから引用)
 ENTRYPOINT ["/rails/bin/docker-entrypoint"]
 
-# Start the server by default, this can be overwritten at runtime
+# コンテナの3000番ポートを開放
 EXPOSE 3000
-CMD ["./bin/rails", "server"]
+
+CMD [ "sh", "-c", "rm -f tmp/pids/server.pid && bin/rails s" ]
