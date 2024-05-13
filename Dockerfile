@@ -58,10 +58,11 @@ RUN SECRET_KEY_BASE="$(bundle exec rails secret)" bin/rails assets:precompile as
 # node_modulesディレクトリとキャッシュディレクトリを削除して，イメージのサイズを小さくする
 && rm -rf /$APP_NAME/node_modules /$APP_NAME/tmp/cache
 
-# Entrypoint prepares the database.(デフォルト生成から引用)
-ENTRYPOINT ["/rails/bin/docker-entrypoint"]
+
+# ENTRYPOINT ["entrypoint.sh"]
 
 # コンテナの3000番ポートを開放
 EXPOSE 3000
 
-CMD [ "sh", "-c", "rm -f tmp/pids/server.pid && bin/rails s" ]
+# CMD ["./bin/rails", "server"]
+CMD [ "sh", "-c", "rm -f tmp/pids/server.pid && bin/rails db:prepare && bin/rails s" ]
