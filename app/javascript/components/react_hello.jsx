@@ -2,7 +2,10 @@ import React from 'react';
 import {createRoot} from 'react-dom/client'
 
 const Hello = props => (
-  <div>こんにちは {props.name} さん！!</div>
+  <>
+    <div>こんにちは {props.name} さん！!</div>
+    <div>このアプリはGitHub Actionsで自動デプロイされています！</div>
+  </>
 )
 
 Hello.defaultProps = {
