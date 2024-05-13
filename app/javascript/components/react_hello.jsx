@@ -4,7 +4,7 @@ import {createRoot} from 'react-dom/client'
 const Hello = props => (
   <>
     <div>こんにちは {props.name} さん！!</div>
-    <div>このアプリはGitHub Actionsで自動デプロイされています！</div>
+    <div>今度こそ，このアプリはGitHub Actionsで自動デプロイされています！</div>
   </>
 )
 
