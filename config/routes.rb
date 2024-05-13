@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :tasks
   root 'react#hello'
   get "another" => "react#another"
   get "graph" => "react#graph"
