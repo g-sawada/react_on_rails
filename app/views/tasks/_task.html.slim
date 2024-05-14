@@ -1,16 +1,13 @@
-table.table-fixed.text-lg.border-separate.border-spacing-y-2
+h2.text-3xl.font-bold.mb-3
+  = task.title
+
+table.w-full.table-fixed.text-lg.border-separate.border-spacing-y-2
   tbody
     tr
-      td
-        strong
-          | Title:
-      td
-        = task.title
-    tr
-      td
+      td.w-1/5
         strong
           | Body:
-      td
+      td.w-4/5
         = task.body
     tr
       td
