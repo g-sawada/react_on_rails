@@ -1,16 +1,7 @@
 import React from 'react';
-import {createRoot} from 'react-dom/client'
-
-const Hello = props => (
-  <>
-    <div>こんにちは {props.name} さん！!</div>
-    <div>今度こそ，このアプリはGitHub Actionsで自動デプロイされています！</div>
-  </>
-)
-
-Hello.defaultProps = {
-  name: '名無し'
-}
+import { createRoot } from 'react-dom/client'
+import { StyledEngineProvider } from '@mui/material/styles';
+import SwipeableTemporaryDrawer from './bottom_drawer';
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('app');
@@ -20,3 +11,19 @@ document.addEventListener('DOMContentLoaded', () => {
     console.log('app not found');
   }
 })
+
+const Hello = props => (
+  <>
+    <div>こんにちは {props.name} さん！!</div>
+    <div>今度こそ，このアプリはGitHub Actionsで自動デプロイされています！</div>
+    <StyledEngineProvider injectFirst>
+      <SwipeableTemporaryDrawer />
+    </StyledEngineProvider>
+  </>
+)
+
+Hello.defaultProps = {
+  name: '名無し'
+}
+
+
