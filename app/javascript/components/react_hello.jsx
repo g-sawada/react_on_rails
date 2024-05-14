@@ -1,7 +1,7 @@
 import React from 'react';
 import { createRoot } from 'react-dom/client'
 import { StyledEngineProvider } from '@mui/material/styles';
-import SwipeableTemporaryDrawer from './bottom_drawer';
+import BottomDrawer from './bottom_drawer';
 
 document.addEventListener('DOMContentLoaded', () => {
   const container = document.getElementById('app');
@@ -17,7 +17,7 @@ const Hello = props => (
     <div>こんにちは {props.name} さん！!</div>
     <div>今度こそ，このアプリはGitHub Actionsで自動デプロイされています！</div>
     <StyledEngineProvider injectFirst>
-      <SwipeableTemporaryDrawer />
+      <BottomDrawer />
     </StyledEngineProvider>
   </>
 )
