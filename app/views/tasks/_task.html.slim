@@ -1,15 +1,20 @@
-| <div id="
-= dom_id task
-| "> 
-p
-  strong
-    | Title:
-  = task.title
-p
-  strong
-    | Body:
-  = task.body
-p
-  strong
-    | Done:
-  = task.done
+table.table-fixed.text-lg.border-separate.border-spacing-y-2
+  tbody
+    tr
+      td
+        strong
+          | Title:
+      td
+        = task.title
+    tr
+      td
+        strong
+          | Body:
+      td
+        = task.body
+    tr
+      td
+        strong
+          | Done:
+      td
+        = task.done
