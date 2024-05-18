@@ -1,0 +1,13 @@
+.container.m-10
+  h1.text-3xl Users 
+  table.table-auto
+    thead
+      tr
+        th UserName
+        th 
+    tbody
+      - @users.each do |user|
+        tr
+          td = user.username
+          td
+            = link_to 'Show', user, class: 'btn btn-sm'
