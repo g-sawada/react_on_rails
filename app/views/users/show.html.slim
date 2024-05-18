@@ -1,3 +1,17 @@
 .container.m-10
   h1.text-3xl 
     | This is <span class="font-bold">#{@user.username}</span> 's page!
+  .mt-10
+    .text-xl.font-bold Graphs
+    ul.my-3
+      - @user.graphs.each do |graph|
+        li.ml-10.mb-3
+          = graph.title
+      
+  .mt-10
+    .text-xl.font-bold Templates 
+    ul.my-3
+      - @user.templates.each do |template|
+        li.ml-10.mb-3
+          = template.title
+
