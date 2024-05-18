@@ -1,4 +1,5 @@
 Rails.application.routes.draw do
+  resources :users, only: [:index, :show]
   resources :tasks
   root 'react#hello'
   get "another" => "react#another"
