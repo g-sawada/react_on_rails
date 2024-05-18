@@ -1,6 +1,6 @@
 class UsersController < ApplicationController
   def index
-    @users = User.all.includes(:graphs, :templates)
+    @users = User.all.includes(:graphs, :templates, :graph_settings)
   end
 
   def show

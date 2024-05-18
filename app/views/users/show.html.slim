@@ -7,11 +7,23 @@
       - @user.graphs.each do |graph|
         li.ml-10.mb-3
           = graph.title
-      
+          ul
+            li.ml-20.my-3
+              - if graph.graph_setting
+                = graph.graph_setting.settings.to_json
+              - else
+                | No settings
+
   .mt-10
     .text-xl.font-bold Templates 
     ul.my-3
       - @user.templates.each do |template|
         li.ml-10.mb-3
           = template.title
+          ul
+            li.ml-20.my-3
+              - if template.graph_setting
+                = template.graph_setting.settings.to_json
+              - else
+                | No settings
 
